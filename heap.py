@@ -24,7 +24,8 @@ def min_nlargest(minheap, n):
 def min_nsmallest(minheap, n):
 	pass
 
-def min_create(x):
+# build min-heap from array
+def min_build(x):
 	pass
 
 # advance

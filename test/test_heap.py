@@ -39,22 +39,20 @@ class test_heap(unittest.TestCase):
 
 		e = []
 		heap.min_heapify(e)
-		with self.assertRaises(IndexError):
-			heap.min_pop(e)
+		self.assertEqual(heap.min_pop(e), None)
 
-	def test_min(self):
+	def test_min_top(self):
 		a = [10, 5, 1]
 		heap.min_heapify(a)
-		self.assertEqual(heap.min(a), 1)
+		self.assertEqual(heap.min_top(a), 1)
 
 		b = [3, 2, 7, 10, 5, 2]
 		heap.min_heapify(b)
-		self.assertEqual(heap.min(b), 2)
+		self.assertEqual(heap.min_top(b), 2)
 
 		e = []
 		heap.min_heapify(e)
-		with self.assertRaises(IndexError):
-			heap.min(e)
+		self.assertEqual(heap.min_top(e), None)
 
 	def test_min_push(self):
 		a = []
@@ -89,8 +87,7 @@ class test_heap(unittest.TestCase):
 		self.assertEqual(heap.min_nsmallest(a, 4), [-1, 5, 10, 20])
 		self.assertEqual(heap.min_nsmallest(a, 5), [-1, 5, 10, 20, 25])
 		self.assertEqual(heap.min_nsmallest(a, 6), [-1, 5, 10, 20, 25, 100])
-		with self.assertRaises(IndexError):
-			heap.min_nsmallest(a, 7)
+		self.assertEqual(heap.min_nsmallest(a, 7), [-1, 5, 10, 20, 25, 100])
 
 	def test_min_nlargest(self):
 		a = [10, 20, 25, 5, -1, 100]

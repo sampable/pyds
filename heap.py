@@ -1,4 +1,6 @@
-def min(minheap):
+def min_top(minheap):
+	if len(minheap) == 0:
+		return None
 	return minheap[0]
 
 def min_push(minheap, item):
@@ -6,6 +8,8 @@ def min_push(minheap, item):
 	__min_shiftup(minheap, len(minheap) - 1)
 
 def min_pop(minheap):
+	if len(minheap) == 0:
+		return None
 	minval = minheap[0]
 	minheap[0] = minheap[len(minheap) - 1]
 	del minheap[len(minheap) - 1]
@@ -40,7 +44,7 @@ def min_nlargest(minheap, n):
 def min_nsmallest(minheap, n):
 	copy = minheap[:]
 	result = []
-	for i in range(n):
+	for i in range(min(n, len(copy))):
 		result.append(min_pop(copy))
 	return result
 

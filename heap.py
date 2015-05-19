@@ -10,7 +10,7 @@ def max_top(maxheap):
 
 def min_push(minheap, item):
 	minheap.append(item)
-	__min_shiftup(minheap, len(minheap) - 1)
+	_min_shiftup(minheap, len(minheap) - 1)
 
 def max_push(maxheap, item):
 	maxheap.append(item)
@@ -143,12 +143,12 @@ def __max_shiftdown(x, idx):
 		x[idx], x[max_idx] = x[max_idx], x[idx]
 		__max_shiftdown(x, max_idx)
 
-def __min_shiftup(x, idx):
+def _min_shiftup(x, idx):
 	if idx <= 0:
 		return
 	if x[(idx - 1) // 2] > x[idx]:
 		x[idx], x[(idx - 1) // 2] = x[(idx - 1) // 2], x[idx]
-		__min_shiftup(x, (idx - 1) // 2)
+		_min_shiftup(x, (idx - 1) // 2)
 
 def __max_shiftup(x, idx):
 	if idx <= 0:
@@ -156,3 +156,88 @@ def __max_shiftup(x, idx):
 	if x[(idx - 1) // 2] < x[idx]:
 		x[idx], x[(idx - 1) // 2] = x[(idx - 1) // 2], x[idx]
 		__max_shiftup(x, (idx - 1) // 2)
+
+class MinHeapQueue:
+	REMOVED = -1
+
+	def __init__(self):
+		self.q = []
+		self.map = {}
+		self.push_cnt = 0
+
+	def top(self):
+		if len(self.q) == 0:
+			return None
+		priority, push_cnt, item = self.q[0]
+		return item
+
+	def push(self, item, priority=0):
+		qitem = self.__to_qitem(item, priority)
+		min_push(self.q, qitem)
+
+	def pop(self):
+		if len(self.q) == 0:
+			return None
+		return self.__from_qitem(min_pop(self.q))
+
+	def pushpop(self, item, priority):
+		qitem = self.__to_qitem(item, priority)
+		return self.__from_qitem(min_pushpop(self.q, qitem))
+
+	def replace(self, item, priority):
+		qitem = self.__to_qitem(item, priority)
+		return self.__from_qitem(min_replace(self.q, qitem))
+
+	def topn(self, n):
+		if n < 0:
+			raise ValueError("n value {0} is less than zero".format(n))
+		top_qitems = min_nsmallest(self.q, n)
+		top_items = [self.__from_qitem(qitem, delete=False) for qitem in top_qitems]
+		return top_items
+
+	def remove(self, item):
+		if item not in self.map:
+			raise KeyError('item {0} not in queue'.format(item))
+		minpriority, push_cnt, topitem = min_top(self.q)
+		self.__decrease_priority(item, minpriority - 1)
+		self.__from_qitem(min_pop(self.q))
+
+	def exists(self, item):
+		return item in self.map
+
+	def update(self, item, priority):
+		if item not in self.map:
+			raise KeyError('item {0} not in queue'.format(item))
+		self.remove(item)
+		self.push(item, priority)
+
+	def empty(self):
+		self.map.clear()
+		self.q = []
+
+	def len(self):
+		return len(self.q)
+
+	def __to_qitem(self, item, priority):
+		if item in self.map:
+			raise ValueError("duplicate item '{0}' push".format(item))
+		qitem = [priority, self.push_cnt, item]
+		self.map[item] = qitem
+		self.push_cnt += 1
+		return qitem
+
+	def __from_qitem(self, qitem, delete=True):
+		priority, push_cnt, item = qitem
+		if delete:
+			del self.map[item]
+		return item
+
+	def __decrease_priority(self, item, newpriority):
+		qitem = self.map[item]
+		if qitem[0] < newpriority:
+			raise ValueError('new priority {0} is higher than original priority {1}'.format(newpriority, oldpriority))
+		idx = self.q.index(qitem)
+		qitem[0] = newpriority
+		_min_shiftup(self.q, idx)
+
+

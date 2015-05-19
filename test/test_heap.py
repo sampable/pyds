@@ -2,6 +2,24 @@ import unittest
 from .. import heap
 
 class test_heap(unittest.TestCase):
+
+	# object for MinHeapQueue and MaxHeapQueue testing
+	# separate classes make trace stack more readable
+	class TestTaskObj():
+		def __init__(self, content):
+			self.content = content
+		def __str__(self):
+			return "<TestTaskObj_{0} id:{1}>".format(self.content, id(self))
+		def __repr__(self):
+			return self.__str__()
+
+	def setUp(self):
+		self.task1 = self.TestTaskObj(1)
+		self.task2 = self.TestTaskObj(2)
+		self.task3 = self.TestTaskObj(3)
+		self.task4 = self.TestTaskObj(4)
+		self.task5 = self.TestTaskObj(5)
+	
 	def test_min_heapify(self):
 		a = [10, 9]
 		heap.min_heapify(a)
@@ -283,6 +301,197 @@ class test_heap(unittest.TestCase):
 			cur = heap.max_pop(a)
 			self.assertTrue(cur <= prev)
 			prev = cur
+
+	def test_MinHeapQueue_push_top(self):
+		mh = heap.MinHeapQueue()
+		self.assertEqual(mh.top(), None)
+		mh.push(self.task1, 10)
+		self.assertEqual(mh.top(), self.task1)
+		mh.push(self.task2, 5)
+		self.assertEqual(mh.top(), self.task2)
+		mh.push(self.task3, 7)
+		self.assertEqual(mh.top(), self.task2)
+		mh.push(self.task4)
+		self.assertEqual(mh.top(), self.task4)
+		with self.assertRaises(TypeError):
+			task5 = {'content':5}
+			mh.push(task5, 0)
+		with self.assertRaises(ValueError):
+			mh.push(self.task1)
+
+	def test_MinHeapQueue_pop_len(self):
+		mh = heap.MinHeapQueue()
+		self.assertEqual(mh.pop(), None)
+		self.assertEqual(mh.len(), 0)
+		mh.push(self.task1, 1)
+		self.assertEqual(mh.pop(), self.task1)
+		self.assertEqual(mh.len(), 0)
+		self.assertEqual(mh.pop(), None)
+		mh.push(self.task2, 5)
+		mh.push(self.task3, 2)
+		mh.push(self.task4, 3)
+		self.assertEqual(mh.pop(), self.task3)
+		self.assertEqual(mh.top(), self.task4)
+		self.assertEqual(mh.len(), 2)
+		self.assertEqual(mh.pop(), self.task4)
+		self.assertEqual(mh.len(), 1)
+		self.assertEqual(mh.pop(), self.task2)
+		self.assertEqual(mh.len(), 0)
+		mh.push(self.task2)
+
+	def test_MinHeapQueue_pushpop(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1, 3)
+		mh.push(self.task2, 5)
+		mh.push(self.task3, 1)
+		self.assertEqual(mh.pushpop(self.task4, 0), self.task4)
+		self.assertEqual(mh.pushpop(self.task4, 0), self.task4)
+		self.assertEqual(mh.pushpop(self.task4, 2), self.task3)
+		with self.assertRaises(ValueError):
+			mh.pushpop(self.task4, 2)
+
+	def test_MinHeapQueue_replace(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1, 3)
+		mh.push(self.task2, 5)
+		mh.push(self.task3, 1)
+		self.assertEqual(mh.replace(self.task4, 0), self.task3)
+		self.assertEqual(mh.replace(self.task5, -1), self.task4)
+
+	def test_MinHeapQueue_topn(self):
+		mh = heap.MinHeapQueue()
+		self.assertEqual(mh.topn(3), [])
+		mh.push(self.task1, 3)
+		self.assertEqual(mh.topn(3), [self.task1])
+		mh.push(self.task2, 5)
+		self.assertEqual(mh.topn(3), [self.task1, self.task2])
+		mh.push(self.task3, 1)
+		self.assertEqual(mh.topn(3), [self.task3, self.task1, self.task2])
+		self.assertEqual(mh.len(), 3)
+		self.assertEqual(mh.top(), self.task3)
+		self.assertEqual(mh.pop(), self.task3)
+		self.assertEqual(mh.topn(0), [])
+		with self.assertRaises(ValueError):
+			mh.topn(-1)
+
+	def test_MinHeapQueue_stable(self):
+		# test first item with priority 4 on left
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1, 1)
+		mh.push(self.task2, 2)
+		mh.push(self.task3, 4)
+		mh.push(self.task4, 4)
+		self.assertEqual(mh.pop(), self.task1)
+		self.assertEqual(mh.pop(), self.task2)
+		self.assertEqual(mh.pop(), self.task3)
+		self.assertEqual(mh.pop(), self.task4)
+		# test first item with priority 4 on right
+		mh2 = heap.MinHeapQueue()
+		mh2.push(self.task1, 1)
+		mh2.push(self.task2, 4)
+		mh2.push(self.task3, 4)
+		self.assertEqual(mh2.pop(), self.task1)
+		self.assertEqual(mh2.pop(), self.task2)
+		self.assertEqual(mh2.pop(), self.task3)
+		# test all item with same priority
+		mh3 = heap.MinHeapQueue()
+		mh3.push(self.task4, 4)
+		mh3.push(self.task3, 4)
+		mh3.push(self.task2, 4)
+		mh3.push(self.task1, 4)
+		self.assertEqual(mh3.pop(), self.task4)
+		self.assertEqual(mh3.pop(), self.task3)
+		self.assertEqual(mh3.pop(), self.task2)
+		self.assertEqual(mh3.pop(), self.task1)
+		# test all item with same priority with pop in middle
+		mh4 = heap.MinHeapQueue()
+		mh3.push(self.task4, 4)
+		mh3.push(self.task3, 4)
+		mh3.push(self.task2, 4)
+		self.assertEqual(mh3.pop(), self.task4)
+		mh3.push(self.task1, 4)
+		mh3.push(self.task4, 4)
+		self.assertEqual(mh3.pop(), self.task3)
+		self.assertEqual(mh3.pop(), self.task2)
+		self.assertEqual(mh3.pop(), self.task1)
+		self.assertEqual(mh3.pop(), self.task4)
+
+	def test_MinHeapQueue_remove(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task3, 3)
+		mh.push(self.task2, 2)
+		mh.push(self.task1, 1)
+		mh.remove(self.task2)
+		mh.push(self.task2, 5)
+		mh.remove(self.task2)
+		self.assertEqual(mh.len(), 2)
+		self.assertEqual(mh.top(), self.task1)
+		self.assertEqual(mh.pop(), self.task1)
+		self.assertEqual(mh.len(), 1)
+		self.assertEqual(mh.pop(), self.task3)
+		self.assertEqual(mh.len(), 0)
+		self.assertEqual(mh.pop(), None)
+		with self.assertRaises(KeyError):
+			mh.remove(self.task4)
+		mh.push(self.task1, 3)
+		self.assertEqual(mh.len(), 1)
+		mh.push(self.task2, 5)
+
+		#test remove and push
+		mh2 = heap.MinHeapQueue()
+		mh2.push(self.task1, 1)
+		mh2.remove(self.task1)
+		self.assertEqual(mh2.len(), 0)
+		mh2.push(self.task1, 2)
+
+	def test_MinHeapQueue_double_remove(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1)
+		mh.remove(self.task1)
+		with self.assertRaises(KeyError):
+			mh.remove(self.task1)
+
+	def test_MinHeapQueue_exists(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1)
+		self.assertTrue(mh.exists(self.task1))
+		self.assertFalse(mh.exists(self.task2))
+
+	def test_MinHeapQueue_remove_replace_pushpop(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1, 1)
+		mh.push(self.task2, 2)
+		mh.push(self.task3, 3)
+		mh.remove(self.task1)
+		self.assertEqual(mh.top(), self.task2)
+		self.assertEqual(mh.replace(self.task4, 2), self.task2)
+		mh.remove(self.task4)
+		self.assertEqual(mh.pushpop(self.task5, 0), self.task5)
+
+	def test_MinHeapQueue_update(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1, 1)
+		mh.push(self.task2, 2)
+		mh.push(self.task3, 3)
+		self.assertEqual(mh.top(), self.task1)
+		mh.update(self.task3, 0)
+		self.assertEqual(mh.top(), self.task3)
+		self.assertEqual(mh.pop(), self.task3)
+		self.assertEqual(mh.top(), self.task1)
+		with self.assertRaises(KeyError):
+			mh.update(self.task3, 3)
+		with self.assertRaises(KeyError):
+			mh.update(self.task5, 5)
+
+	def test_MinHeapQueue_empty(self):
+		mh = heap.MinHeapQueue()
+		mh.push(self.task1, 1)
+		mh.push(self.task2, 2)
+		mh.push(self.task3, 3)
+		self.assertEqual(mh.len(), 3)
+		mh.empty()
+		self.assertEqual(mh.len(), 0)
+		self.assertEqual(mh.top(), None)
 
 if __name__ == '__main__':
 	unittest.main(verbosity=2)
